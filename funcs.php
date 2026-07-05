@@ -92,10 +92,15 @@ function db_conn(){
 // さくら用
 function db_conn_sakura(){
     try {
-        $db_name = env_value('SAKURA_DB_NAME', 'junito-1210_trip_app_v2');
-        $db_id   = env_value('SAKURA_DB_USER', 'junito-1210_trip_app_v2');
-        $db_pw   = env_value('SAKURA_DB_PASS', '0404_ruke');
-        $db_host = env_value('SAKURA_DB_HOST', 'mysql3116.db.sakura.ne.jp');
+        $db_name = env_value('SAKURA_DB_NAME', '');
+        $db_id   = env_value('SAKURA_DB_USER', '');
+        $db_pw   = env_value('SAKURA_DB_PASS', '');
+        $db_host = env_value('SAKURA_DB_HOST', '');
+
+        if ($db_name === '' || $db_id === '' || $db_pw === '' || $db_host === '') {
+            exit('Sakura DB settings are not configured.');
+        }
+
         $pdo = new PDO('mysql:dbname='.$db_name.';charset=utf8;host='.$db_host, $db_id, $db_pw);
         return $pdo;
     } catch (PDOException $e) {

@@ -8,6 +8,7 @@ config.local.php
 sakura-config.php
 sakura*.php
 funcs.php
+config/sakura.php
 
 # macOS
 .DS_Store
