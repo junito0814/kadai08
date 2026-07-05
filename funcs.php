@@ -44,6 +44,22 @@ if (!is_file($envFile) && is_file(__DIR__.'/.env.example')) {
 }
 load_env_file($envFile);
 
+$configFile = __DIR__ . '/config/sakura.php';
+if (is_file($configFile)) {
+    $sakuraConfig = include $configFile;
+    if (is_array($sakuraConfig)) {
+        foreach ($sakuraConfig as $name => $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+            $value = trim($value, "\"' ");
+            putenv($name.'='.$value);
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+        }
+    }
+}
+
 function env_value($key, $default = ''){
     $value = getenv($key);
     if ($value === false || $value === null || $value === '') {
