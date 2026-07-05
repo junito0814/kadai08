@@ -1,0 +1,349 @@
+<?php
+//エラー表示
+ini_set("display_errors",1);
+
+// XSS対策用：エスケープ処理の関数
+function h($str) {
+    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+}
+
+//db接続
+// localhost用
+include("funcs.php");
+$pdo = db_conn();
+
+// さくら用
+// include("funcs.php");
+// $pdo = db_conn_sakura();
+
+
+// id受け取り
+$id = $_GET["id"] ?? null;  
+
+// idなし、数値でない場合処理ストップ
+if($id === null || !is_numeric($id)){
+    exit("ダメー");
+}
+
+//sql作成
+$stmt = $pdo->prepare("SELECT * FROM trip WHERE id = :id");
+$stmt -> bindValue(":id", $id, PDO::PARAM_INT);
+$status = $stmt->execute();
+
+//データ表示
+$view = "";
+if($status == false){
+    $error = $stmt->errorInfo();
+    exit("SQL Error:".$error[2]);
+}
+
+//1件データ取得
+$values = $stmt->fetch(PDO::FETCH_ASSOC);
+
+//この投稿に紐づく写真をすべて取得（編集画面で今の写真を見せるため）
+$photoStmt = $pdo->prepare("SELECT path FROM photos WHERE trip_id = :id");
+$photoStmt->bindValue(":id", $id, PDO::PARAM_INT);
+$photoStmt->execute();
+$photos = $photoStmt->fetchAll(PDO::FETCH_COLUMN);
+
+// マップ用にlat,lng,spotNameのみ取得
+    $mapPoints[] = [
+        "lat" => (float)$values["lat"],
+        "lng" => (float)$values["lng"],
+        "spotName" => $values["spotName"]
+    ];
+
+        // JavaScriptに安全にデータを渡すためにJSON化
+    $jsonMapPoints = json_encode($mapPoints, JSON_UNESCAPED_UNICODE);
+?>
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <?= google_maps_script_tag() ?>
+
+    <title>更新</title>
+</head>
+<body>
+    <header>
+        <div class="menu">
+            <h2 class="menuTitle">T R I P</h2>
+            <button id="toHome">HOME</button>
+            <button id="toPost">POST</button>
+        </div>
+    </header>
+
+    <h1 id="title">R E P O S T</h1>
+
+    <div id="postForm">
+        <form method="post" action="renew.php" enctype="multipart/form-data" onkeydown="if(event.key === 'Enter'){return false;}">    
+            <div id="place" class="postTitle">
+                <label>行き先</label>
+                <gmp-place-autocomplete id="autocomplete-container" placeholder="<?= h($values["spotName"]) ?>"></gmp-place-autocomplete>   
+
+                    <input type="hidden" name="spotName" id="spotName" value="<?= h($values["spotName"]) ?>"> 
+
+                <div id="setMap"></div>
+                <!-- phpでデータ渡すときに座標が必要なため、以下を用意 -->
+                <input type="hidden" name="lat" id="lat" value="<?= $values["lat"] ?>">
+                <input type="hidden" name="lng" id="lng" value="<?= $values["lng"] ?>">
+            </div>
+
+            <div class="postTitle">
+                <label>日付</label>
+                <div><input type="date" name="tripDate" class="formInput" id="tripDate" value="<?= h($values["tripDate"]) ?>"></div>
+            </div>
+
+            <div class="postTitle">
+                <label>滞在時間</label>
+                <div><input type="number" name="spendTime" class="formInput" id="spendTime" value="<?= h($values["spendTime"]) ?>">時間</div>
+            </div>
+
+            <div class="postTitle">
+                <label>費用</label>
+                <div><input type="number" name="cost" class="formInput" id="cost" value="<?= h($values["cost"]) ?>">円</div>
+            </div>
+
+            <div id="star" class="postTitle">
+                <label>評価</label>
+                <div>
+                <input type="hidden" name="score" id="score" value="<?= h($values["score"]) ?>">
+                <span class="star">⭐️</span>
+                <span class="star">⭐️</span>
+                <span class="star">⭐️</span>
+                <span class="star">⭐️</span>
+                <span class="star">⭐️</span>
+                </div>
+            </div>
+
+            <div class="postTitle">
+                <label>感想</label>
+                <div><textarea name="comment" id="comment" id="comment"><?= h($values["comment"]) ?></textarea></div>
+            </div>
+
+            <div class="postTitle">
+                <label>現在の写真</label>
+                <?php if (!empty($photos)): ?>
+                <div class="photoScroll">
+                    <?php foreach ($photos as $photoPath): ?>
+                        <img src="<?= h($photoPath) ?>" alt="<?= h($values["spotName"]) ?>" class="photoItem">
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                <p>まだ写真がありません</p>
+                <?php endif; ?>
+            </div>
+
+            <div class="postTitle">
+                <label>写真を追加</label>
+                <div><input type="file" name="photo[]" id="photo" accept="image/*" multiple></div>
+            </div>
+
+            <input type="hidden" name="id" value="<?= h($values["id"]) ?>">
+            <input type="submit" value="UPDATE" class="submitBtn">
+        </form>
+    </div>
+
+    <script>
+        //マップ機能
+        let map;
+        let marker = null;
+        let AdvancedMarkerElementClass ;
+
+        // フォームの誤送信を防ぐ（検索窓のエンターは通す）
+        $(document).on("keydown", "#postForm", function(e) {
+            if ((e.which === 13 || e.key === 'Enter')) {
+                // テキストエリア、またはGoogleの検索窓の中でのエンターなら送信を防止しない
+                if ($(e.target).is('textarea') || $(e.target).closest('gmp-place-autocomplete').length > 0) {
+                    return true; 
+                }
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // マップを画面に出す
+        async function initMap(){
+
+            //使う機能をgoogleからインポート
+            // awaitを使うことで順番に確実に読み込んでから次に進む
+            const {Map} = await google.maps.importLibrary("maps");
+            const {AdvancedMarkerElement} = await google.maps.importLibrary("marker");
+            const {PlaceAutocompleteElement} = await google.maps.importLibrary("places");
+
+            AdvancedMarkerElementClass = AdvancedMarkerElement;
+
+            // 登録されている緯度、経度
+            const savedLat = parseFloat($("#lat").val());
+            const savedLng = parseFloat($("#lng").val());
+            const defaultPos = (!isNaN(savedLat) && !isNaN(savedLng)) 
+                ? {lat: savedLat, lng: savedLng} 
+                : {lat: 35.681236, lng: 139.767125};  
+
+            // 地図オブジェクトを作成し、#setMapに入れる
+            map = new google.maps.Map(document.getElementById('setMap'),{
+                    center: defaultPos,
+                    zoom: (!isNaN(savedLat)? 15:7),
+                    mapId: "DEMO_MAP_ID"
+            });
+
+            // 登録されている場所にピンさす
+            if(!isNaN(savedLat) && !isNaN(savedLng)){
+                createOrMoveMarker(defaultPos);
+            }
+
+            // 行き先のとこを検索欄にする
+            const autocompleteComponent = document.getElementById('autocomplete-container');
+
+            // Googleの検索窓（Shadow DOM）の内部まで潜り込んでエンター送信を強制ブロックする
+            autocompleteComponent.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation(); // 上位のフォームに「エンターが押されたよ」と伝わるのを遮断
+            }
+        }, true);
+
+        // 検索結果のリストから場所を選択したものを監視
+        autocompleteComponent.addEventListener('gmp-select', async function(e){
+            const { placePrediction } = e;
+            const place = placePrediction.toPlace();
+
+            try {
+                // 座標取得
+                await place.fetchFields({fields: ['location', 'displayName']});
+
+                // 座標情報が取得できなかった時のためのエラー防止
+                if(!place.location){
+                    return;
+                } 
+
+                // 取得した座標をlocationに入れる
+                const location = place.location;
+
+                // 場所の名前がわかっていれば行き先（spotName）に入れる
+                if(place.displayName){
+                    $("#spotName").val(place.displayName);
+                }
+
+                // 地図中心移動
+                map.setCenter(location);
+                map.setZoom(17);
+
+                // 選んだ場所にピンを指す
+                createOrMoveMarker(location);
+                
+                // エラーが起きればconsole.logにエラー表示
+            }catch (error){
+                console.error("データ取得失敗",error)
+            }
+        });    
+
+                // 手動でピンを指す
+            map.addListener('click', function(e){
+                createOrMoveMarker(e.latLng);
+            });
+
+            setTimeout(() => {
+                const initialSpotName = $("#spotName").data("init-name");
+                if (initialSpotName) {
+                    $("#spotName").val(initialSpotName);
+                }
+            }, 300);
+
+        }
+
+            function createOrMoveMarker(latLng){
+                if(marker === null){
+                    // まだピンがなかったら新しく地図に置く
+                    marker = new AdvancedMarkerElementClass({
+                        position: latLng,
+                        map: map,
+                        gmpDraggable: true  //ドラッグ移動許可
+                    });
+
+                    marker.addListener('dragend', function(e){
+                        const pos = marker.position;
+                        $("#lat").val(typeof pos.lat ==='function' ? pos.lat() : pos.lat);
+                        $("#lng").val(typeof pos.lng ==='function' ? pos.lng() : pos.lng);
+                    })
+                }else{
+                    // すでにピンがあれば、新しくピンを刺さずにそれを移動
+                    marker.position = latLng;
+                }
+
+                // 隠し入力欄のlat,lngに数値セット
+                const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+                const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
+                $("#lat").val(lat);
+                $("#lng").val(lng);
+            }
+        
+            // ページ読み込みが完了すれば以下を実行
+            $(document).ready(function(){
+                if(typeof google !== 'undefined' && google.maps){
+                    initMap();
+                }
+            });
+
+        // 星評価
+        let rating = parseInt($("#score").val()) || 0;
+
+        $(document).ready(function(){
+            updateStars();
+        })
+
+        $(".star").on('click',function(){
+            rating = $(".star").index(this)+1;
+            $("#score").val(rating);
+            updateStars();
+        });
+
+        function updateStars(){
+            $(".star").each(function(index){
+                if(index < rating){
+                    $(this).css('opacity','1');
+                }else{
+                    $(this).css('opacity','0.3')
+                }
+            });
+        }
+
+        $(".submitBtn").on('click',function(){
+            const inputInfo = [
+                $("#spotName").val(),
+                $("#lat").val(),
+                $("#lng").val(),
+                $("#tripDate").val(),
+                $("#spendTime").val(),
+                $("#cost").val(),
+                $("#score").val(),
+                $("#comment").val()
+            ];
+
+            const empty = inputInfo.some(function(value){
+                return value === "";
+            });
+
+            if (empty){
+                alert("すべて入力してください");
+                e.preventDefault();
+            }
+        })
+
+        // メニューボタン
+        $("#toHome").on('click',function(){
+            window.location.href="sns.php";
+        });
+
+        $("#toPost").on('click',function(){
+            window.location.href="post.php";
+        });
+
+    </script>    
+    </body>
+
+</html>

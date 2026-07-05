@@ -1,0 +1,278 @@
+/* メニューボタン */
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.368);
+    color: blue;
+}
+
+.menuTitle {
+    font-size: 30px;
+    color: blue;
+}
+
+.menu {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 50px;
+}
+
+.menu button {
+    padding: 10px 13px;
+    font-size: 15px;
+    cursor: pointer;
+    background-color: rgb(0, 0, 0);
+    color: floralwhite;
+    transition: 0.3s;
+}
+
+.menu button:hover {
+    transform: scale(1.15);
+    background-color: gray;
+}
+
+body {
+    background-color: black;
+}
+
+#title {
+    text-align: center;
+    color: blue;
+    margin-top: 120px;
+}
+
+
+/* postページ */
+
+form {
+    width: 600px;
+    gap: 20px;
+}
+
+#postForm {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    background-color: rgb(67, 67, 67);
+    margin: 30px auto;
+    width: 800px;
+    color: #ccc;
+    border-radius: 20px;
+    border:2px solid #ccc;
+}
+
+.formInput {
+    width: 50%;
+}
+
+#place {
+    width: 100%;
+    margin-top: 20px;
+}
+
+#setMap {
+    height: 200px;
+    width: 100%;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 30px;
+}
+
+input {
+    width: 95%;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.642);
+}
+
+#comment {
+    width: 80%;
+    height: 100px;
+    background-color: rgba(0, 0, 0, 0.642);
+    color: white;
+}
+
+#postForm .submitBtn {
+    padding: 20px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    background-color: blue;
+    width: 100px;
+    margin: 20px;
+    transition: 0.3s;
+}
+
+#postForm .submitBtn:hover {
+    transform: scale(1.15);
+    background-color: blue;
+}
+
+.postTitle {
+    margin-bottom: 25px;
+}
+
+.star {
+    opacity: 0.3;
+    font-size: 35px;
+}
+
+
+
+/* snsページ */
+
+.card {
+    width: 300px;
+    height: auto;
+    text-align: center;
+    color: #ccc;
+    background-color: rgb(58, 58, 58);
+    border-radius: 30px;
+    transition: 0.3s;
+}
+
+.card:hover {
+    box-shadow: 0 0 10px 5px rgb(255, 255, 255);
+    transform: scale(1.05);
+    background-color: #454545;
+}
+
+.cardContainer {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    width: 100%;
+}
+
+#weeklyMap {
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 50px;
+    height: 400px;
+    width: 900px;
+    border-radius: 30px;
+}
+
+.search {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+.search input {
+    width: 400px;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    text-align: center;
+    background-color: #3d3d3d;
+}
+
+.photoScroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.photoItem {
+    margin-left: auto;
+    margin-right: auto;
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+}
+
+.likeArea {
+    display: flex;
+    justify-content: right;
+    gap: 6px;
+    margin: 10px 40px 10px 0;
+}
+
+.likeBtn {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 20px;
+    padding: 0;
+    transition: 0.2s;
+}
+
+.likeBtn:hover {
+    transform: scale(1.3);
+}
+
+
+/* 詳細ページ */
+
+#detailCard {
+    width: 500px;
+    height: auto;
+    text-align: center;
+    color: #ccc;
+    background-color: rgb(58, 58, 58);
+    border-radius: 30px;
+    margin-top: 130px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid #ccc;
+}
+
+.infoD {
+    font-size: 20px;
+}
+
+#mapD {
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10px;
+    width: 400px;
+    height: 200px;
+    border-radius: 20px;
+}
+
+#cardMenu{
+    display: flex;
+    margin: 10px 0 10px 0;
+}
+
+#toUpdate, #toDelete{
+    color: rgb(255, 255, 255);
+}
+
+#custom{
+    margin: 10px 0 0 300px;
+}
+
+.likeAreaD {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 0 50px;
+}
+
+.likeBtnD {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 20px;
+    padding: 0;
+    transition: 0.2s;
+}
+
+.likeBtnD:hover {
+    transform: scale(1.3);
+}

@@ -1,0 +1,12 @@
+.env
+.env.*
+.env.example
+
+# Local-only secrets and config
+*.local
+config.local.php
+sakura-config.php
+sakura*.php
+
+# macOS
+.DS_Store
