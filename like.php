@@ -4,12 +4,12 @@ ini_set("display_errors",1);
 
 //db接続
 // localhost用
-include("funcs.php");
-$pdo = db_conn();
+// include("funcs.php");
+// $pdo = db_conn();
 
 // さくら用
-// include("funcs.php");
-// $pdo = db_conn_sakura();
+include("funcs.php");
+$pdo = db_conn_sakura();
 
 //送られてきたidを取得
 $id = $_POST["id"] ?? null;

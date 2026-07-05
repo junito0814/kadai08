@@ -16,12 +16,12 @@ $comment   = $_POST["comment"];
 
 //db接続
 // localhost用
-include("funcs.php");
-$pdo = db_conn();
+// include("funcs.php");
+// $pdo = db_conn();
 
 // さくら用
-// include("funcs.php");
-// $pdo = db_conn_sakura();
+include("funcs.php");
+$pdo = db_conn_sakura();
 
 
 
