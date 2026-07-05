@@ -27,9 +27,10 @@ require_once __DIR__ . '/funcs.php';
         <form method="post" action="insert.php" enctype="multipart/form-data" onkeydown="if(event.key === 'Enter'){return false;}">    
             <div id="place" class="postTitle">
                 <label>行き先</label>
-                <gmp-place-autocomplete id="autocomplete-container">
-                    <input type="text" name="spotName" id="spotName">
-                </gmp-place-autocomplete>   
+                <gmp-place-autocomplete id="autocomplete-container"></gmp-place-autocomplete>   
+
+                    <input type="hidden" name="spotName" id="spotName">
+  
 
                 <div id="setMap"></div>
                 <!-- phpでデータ渡すときに座標が必要なため、以下を用意 -->
@@ -154,7 +155,7 @@ require_once __DIR__ . '/funcs.php';
 
                 // 場所の名前がわかっていれば行き先（spotName）に入れる
                 if(place.displayName){
-                    $("#spotName").val(place.displayName);
+                    $("#spotName").val(place.displayName);   
                 }
 
                 // 地図中心移動
